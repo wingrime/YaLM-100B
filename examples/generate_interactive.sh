@@ -1,8 +1,7 @@
 # Set visible devices
-export CUDA_VISIBLE_DEVICES="0,1,2,3,4,5,6,7"
-
+#export CUDA_VISIBLE_DEVICES="0,1,2,3,4,5,6,7"
 # Set MP_SIZE to the number of devices
-MP_SIZE=8
+MP_SIZE=1
 
 # Provide path to vocab file and model
 VOCAB_PATH="yalm100b_checkpoint/vocab/voc_100b.sp"
@@ -13,12 +12,12 @@ LOAD_ARGS="\
 
 # Set generation parameters
 GEN_ARGS="
-    --temperature 1.0 \
+    --temperature 0.1 \
     --top_p 0.9 \
-    --seed 1234 \
+    --seed 1235 \
     --seq-length 256 \
     --out-seq-length 128"
-
+#80layers
 HPARAM_ARGS="\
     --pos-encoding-type rotary \
     --num-layers 80 \
@@ -29,7 +28,7 @@ HPARAM_ARGS="\
     --num-attention-heads 128 \
     --max-position-embeddings 1024 \
     --tokenizer-type SentencePiece \
-    --fp16"
+    "
 
 DISTRIBUTED_ARGS="--nproc_per_node $MP_SIZE \
                   --nnodes 1 \

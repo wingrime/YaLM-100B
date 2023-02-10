@@ -37,6 +37,7 @@ def is_unitialized():
 
 
 def initialize_model_parallel(model_parallel_size_):
+    print('IININININI----------------------------')
     """
     Initialize model data parallel groups.
 

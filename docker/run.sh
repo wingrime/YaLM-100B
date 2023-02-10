@@ -6,5 +6,5 @@ docker run \
 --name "yalm-cuda11-ds-${USER}" \
 -v ${SSH_AUTH_SOCK}:${SSH_AUTH_SOCK} -e SSH_AUTH_SOCK="${SSH_AUTH_SOCK}" \
 -e REAL_USER="${USER}" \
---net host -it --rm --gpus all \
+--net host -it --rm  \
 $IMAGE_NAME /bin/bash

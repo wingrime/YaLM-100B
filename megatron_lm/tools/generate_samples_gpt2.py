@@ -30,7 +30,8 @@ from megatron.training import get_model
 from megatron.text_generation_utils import generate_and_write_samples_unconditional
 from megatron.text_generation_utils import generate_samples_input_from_file
 from megatron.text_generation_utils import generate_samples_interactive
-
+import torch
+import traceback
 
 def model_provider():
     """Build the model."""
@@ -80,11 +81,12 @@ def main():
     """Main program."""
 
     initialize_megatron(extra_args_provider=add_text_generate_args,
-                        args_defaults={'tokenizer_type': 'GPT2BPETokenizer'})
+                        args_defaults={'tokenizer_type': 'GPT2BPETokenizer'},allow_no_cuda= True)
 
     # Set up model and load checkpoint.
     model = get_model(model_provider)
     args = get_args()
+    torch.set_num_threads(12)
     if args.load is not None:
         _ = load_checkpoint(model, None, None)
 
@@ -94,7 +96,15 @@ def main():
         if args.sample_input_file != None:
             generate_samples_input_from_file(model)
         else:
-            generate_samples_interactive(model)
+            while True:
+                try:
+                    generate_samples_interactive(model)
+                except KeyboardInterrupt:
+                    break
+                except Exception as e:
+                    print(e)
+                    print(traceback.format_exc())
+                    continue
     else:
         generate_and_write_samples_unconditional(model)
 

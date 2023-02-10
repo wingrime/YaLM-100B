@@ -350,7 +350,7 @@ class ParallelSelfAttention(MegatronModule):
             output_size[2], 
             output_size[3],
             dtype=query_layer.dtype, 
-            device=torch.cuda.current_device())
+            device=torch.device("cpu"))
 
         # Raw attention scores. [b * np, sq, sk]
         matmul_result = torch.baddbmm(matmul_result, 

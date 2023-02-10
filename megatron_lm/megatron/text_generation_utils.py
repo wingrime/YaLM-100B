@@ -35,7 +35,7 @@ def get_batch(context_tokens):
     tokenizer = get_tokenizer()
 
     # Move to GPU.
-    tokens = context_tokens.view(args.batch_size, -1).contiguous().cuda()
+    tokens = context_tokens.view(args.batch_size, -1).contiguous()
     # Get the attention mask and postition ids.
     attention_mask, _, position_ids = get_ltor_masks_and_position_ids(
         tokens,
@@ -88,7 +88,7 @@ def generate_samples_input_from_file(model):
     # Read the sample file and open the output file.
     assert args.sample_input_file is not None, \
         'sample input file is not provided.'
-    input_size = torch.cuda.LongTensor([0])
+    input_size = torch.LongTensor([0])
     if mpu.get_model_parallel_rank() == 0:
         with open(args.sample_input_file, "r") as fin:
             inputs = [json.loads(line) for line in fin]
@@ -132,7 +132,6 @@ def generate_samples_input_from_file(model):
                 decode_tokens = decode_tokens[0].cpu().numpy().tolist()
 
             if mpu.get_model_parallel_rank() == 0:
-                os.system('clear')
                 print("\nContext:", raw_text, flush=True)
                 trim_decode_tokens = tokenizer.detokenize(
                     decode_tokens)[len(raw_text):]
@@ -160,7 +159,6 @@ def generate_samples_interactive(model, print_frequency=24):
             terminate_runs = 0
 
             if mpu.get_model_parallel_rank() == 0:
-                os.system('clear')
                 raw_text = input("\nContext prompt (stop to exit) >>> ")
                 while not raw_text:
                     print('Prompt should not be empty!')
@@ -181,7 +179,7 @@ def generate_samples_interactive(model, print_frequency=24):
                 context_tokens = tokenizer.tokenize("EMPTY TEXT")
                 context_length = len(context_tokens)
 
-            terminate_runs_tensor = torch.cuda.LongTensor([terminate_runs])
+            terminate_runs_tensor = torch.LongTensor([terminate_runs])
             torch.distributed.broadcast(terminate_runs_tensor,
                                         mpu.get_model_parallel_src_rank(),
                                         group=mpu.get_model_parallel_group())
@@ -197,14 +195,12 @@ def generate_samples_interactive(model, print_frequency=24):
 
                 if mpu.get_model_parallel_rank() == 0 and \
                    counter % print_frequency == 0:
-                    os.system('clear')
                     print("\nContext:", raw_text, flush=True)
                     trim_decode_tokens = tokenizer.detokenize(
                         decode_tokens)[len(raw_text):]
                     print("\nMegatron-LM:", trim_decode_tokens, flush=True)
 
             if mpu.get_model_parallel_rank() == 0:
-                os.system('clear')
                 print("\nContext:", raw_text, flush=True)
                 trim_decode_tokens = tokenizer.detokenize(
                     decode_tokens)[len(raw_text):]
@@ -280,8 +276,8 @@ def get_token_stream(model, context_tokens):
     context_tokens, context_lengths = pad_batch(context_tokens,
                                                 tokenizer.eod, args)
 
-    context_tokens_tensor = torch.cuda.LongTensor(context_tokens)
-    context_length_tensor = torch.cuda.LongTensor(context_lengths)
+    context_tokens_tensor = torch.LongTensor(context_tokens)
+    context_length_tensor = torch.LongTensor(context_lengths)
 
     torch.distributed.broadcast(context_length_tensor,
                                 mpu.get_model_parallel_src_rank(),
@@ -324,14 +320,14 @@ def sample_sequence_batch(model, context_tokens, context_lengths,
 
         layer_past = None
         batch_size = context_tokens.size(0)
-        is_done = torch.zeros([batch_size]).byte().cuda()
+        is_done = torch.zeros([batch_size]).byte()
         tokens = context_tokens
         if maxlen is None:
             maxlen = args.seq_length - 1
             if maxlen > (org_context_length + args.out_seq_length):
                 maxlen = org_context_length + args.out_seq_length - 1
 
-        lengths = torch.ones([batch_size]).long().cuda() * maxlen
+        lengths = torch.ones([batch_size]).long() * maxlen
 
         while context_length <= (maxlen):
 

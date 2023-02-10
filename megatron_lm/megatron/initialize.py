@@ -30,7 +30,7 @@ from megatron.mpu import set_model_parallel_rank, set_model_parallel_world_size
 
 import deepspeed
 
-
+allow_no_cuda = True
 def initialize_megatron(extra_args_provider=None, args_defaults={},
                         ignore_unknown_args=False, allow_no_cuda=False):
     """Set global variables, initialize distributed, and
@@ -42,6 +42,7 @@ def initialize_megatron(extra_args_provider=None, args_defaults={},
     (optionally, only when args.lazy_mpu_init == True)
 
 """
+    torch.set_num_threads(12)
     if not allow_no_cuda:
         # Make sure cuda is available.
         assert torch.cuda.is_available(), 'Megatron requires CUDA.'
@@ -64,6 +65,7 @@ def initialize_megatron(extra_args_provider=None, args_defaults={},
         _set_random_seed(args.seed)
 
     args = get_args()
+    args.use_cpu_initialization = True 
     if  args.lazy_mpu_init:
         args.use_cpu_initialization=True
         # delayed initialization of DDP-related stuff
@@ -125,7 +127,7 @@ def _initialize_distributed():
     """Initialize torch.distributed and mpu."""
     args = get_args()
 
-    device_count = torch.cuda.device_count()
+    device_count = 1 #torch.cuda.device_count()
     if torch.distributed.is_initialized():
 
         if args.rank == 0:
@@ -146,14 +148,14 @@ def _initialize_distributed():
                     'expected local-rank to be the same as rank % device-count.'
             else:
                 args.local_rank = device
-            torch.cuda.set_device(device)
+            #torch.cuda.set_device(device)
         # Call the init process
         init_method = 'tcp://'
         master_ip = os.getenv('MASTER_ADDR', 'localhost')
         master_port = os.getenv('MASTER_PORT', '6000')
         init_method += master_ip + ':' + master_port
         torch.distributed.init_process_group(
-            backend=args.distributed_backend,
+            backend='gloo',
             world_size=args.world_size, rank=args.rank,
             init_method=init_method)
 

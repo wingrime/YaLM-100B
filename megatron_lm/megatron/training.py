@@ -141,7 +141,7 @@ def get_model(model_provider_func):
         return model
 
     # GPU allocation.
-    model.cuda(torch.cuda.current_device())
+    #model.cuda(torch.cuda.current_device())
 
     # Fp16 conversion.
     if args.fp16:
